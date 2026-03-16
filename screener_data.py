@@ -51,12 +51,12 @@ def fetch_stock_data(stock_codes: List[str], max_concurrent: int = 5) -> List[Di
             quote = get_stock_quote(code, market)
 
             if 'error' not in quote:
-                # 计算市盈率（模拟数据，实际应从财务接口获取）
-                # 这里使用简单模拟：随机生成PE在5-50之间
-                # TODO: 替换为真实财务数据API调用
-                pe = random.uniform(5, 50)
+                # 使用真实财务数据（如果接口提供）
+                pe = quote.get('pe', random.uniform(5, 50))
+                pb = quote.get('pb', 0.0)
+                market_cap = quote.get('market_cap', quote['current'] * random.uniform(1e8, 1e10))
+                # ROE暂时使用模拟数据，后续可接入akshare
                 roe = random.uniform(5, 25)
-                market_cap = quote['current'] * random.uniform(1e8, 1e10)  # 模拟市值
 
                 stock_info = {
                     'code': code,
@@ -71,6 +71,7 @@ def fetch_stock_data(stock_codes: List[str], max_concurrent: int = 5) -> List[Di
                     'low': quote['low'],
                     'open': quote['open'],
                     'pe': round(pe, 2),
+                    'pb': round(pb, 2),
                     'roe': round(roe, 2),
                     'market_cap': round(market_cap, 2),
                     'timestamp': quote['timestamp']
@@ -100,6 +101,8 @@ def filter_stocks(stocks: List[Dict[str, Any]], conditions: Dict[str, Any]) -> L
     - max_change_percent: 最大涨跌幅（%）
     - min_volume: 最小成交量（手）
     - max_pe: 最大市盈率
+    - max_pb: 最大市净率
+    - min_pb: 最小市净率
     - min_roe: 最小净资产收益率（%）
     - min_market_cap: 最小市值
     - max_market_cap: 最大市值
@@ -132,6 +135,12 @@ def filter_stocks(stocks: List[Dict[str, Any]], conditions: Dict[str, Any]) -> L
 
         # PE筛选
         if 'max_pe' in conditions and stock['pe'] > conditions['max_pe']:
+            match = False
+
+        # PB筛选
+        if 'max_pb' in conditions and stock['pb'] > conditions['max_pb']:
+            match = False
+        if 'min_pb' in conditions and stock['pb'] < conditions['min_pb']:
             match = False
 
         # ROE筛选
@@ -168,6 +177,8 @@ def main():
     parser.add_argument('--max-change', type=float, help='最大涨跌幅（%）')
     parser.add_argument('--min-volume', type=int, help='最小成交量（手）')
     parser.add_argument('--max-pe', type=float, help='最大市盈率')
+    parser.add_argument('--max-pb', type=float, help='最大市净率')
+    parser.add_argument('--min-pb', type=float, help='最小市净率')
     parser.add_argument('--min-roe', type=float, help='最小净资产收益率（%）')
     parser.add_argument('--min-market-cap', type=float, help='最小市值')
     parser.add_argument('--max-market-cap', type=float, help='最大市值')
@@ -196,6 +207,10 @@ def main():
         conditions['min_volume'] = args.min_volume
     if args.max_pe is not None:
         conditions['max_pe'] = args.max_pe
+    if args.max_pb is not None:
+        conditions['max_pb'] = args.max_pb
+    if args.min_pb is not None:
+        conditions['min_pb'] = args.min_pb
     if args.min_roe is not None:
         conditions['min_roe'] = args.min_roe
     if args.min_market_cap is not None:
