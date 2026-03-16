@@ -1,0 +1,14 @@
+# Ignore special Windows files
+nul
+# Ignore temporary files
+.cowork-temp/
+logs/
+*.log
+# Ignore downloaded ngrok
+ngrok.exe
+ngrok.zip
+# Ignore environment files
+.env
+venv/
+__pycache__/
+*.pyc

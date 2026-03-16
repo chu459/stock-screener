@@ -1,0 +1,9 @@
+{
+  "name": "智能选股工具健康监控",
+  "schedule": { "type": "cron", "expression": "*/5 * * * *" },
+  "prompt": "你是一个系统运维助手。请执行以下步骤：\n1. 切换到工作目录：C:/Users/17632/lobsterai/project/content_pusher/stock_screener\n2. 运行健康检查命令：python monitor.py --once --url http://localhost:5000\n3. 如果命令退出码为0（成功），输出'✅ 服务正常'并结束。\n4. 如果命令退出码非0（失败），执行以下恢复步骤：\n   a. 检查Flask服务器进程：tasklist | findstr python\n   b. 如果发现python.exe进程监听端口5000，尝试终止：taskkill /PID <PID> /F\n   c. 启动Flask服务器：start /B python app.py\n   d. 等待10秒后再次运行健康检查：python monitor.py --once --url http://localhost:5000\n   e. 输出恢复结果。\n5. 记录本次检查日志到文件 logs/monitor_cron.log。\n注意：所有操作请使用Bash工具执行，确保命令正确。如果遇到权限问题，记录错误。",
+  "workingDirectory": "C:/Users/17632/lobsterai/project/content_pusher/stock_screener",
+  "description": "每5分钟检查智能选股工具服务健康状态，异常时自动重启",
+  "executionMode": "local",
+  "notifyPlatforms": []
+}
