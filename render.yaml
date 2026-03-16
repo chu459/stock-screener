@@ -9,7 +9,3 @@ services:
         value: 3.10.0
     healthCheckPath: /
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
