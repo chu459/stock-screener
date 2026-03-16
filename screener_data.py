@@ -17,6 +17,8 @@ import json
 import time
 import random
 from typing import List, Dict, Any
+import akshare as ak
+import pandas as pd
 
 # 添加父目录到路径，以便导入eastmoney模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,6 +33,26 @@ def load_stock_list(file_path: str) -> List[str]:
             if line and not line.startswith('#'):
                 stocks.append(line)
     return stocks
+
+def get_roe_from_akshare(stock_code, market):
+    """
+    从akshare获取ROE数据
+    返回最近季度的ROE（年化），如果获取失败则返回None
+    """
+    try:
+        # 构建akshare所需的股票代码格式（例如：sz000001）
+        akshare_code = f"{market}{stock_code}"
+        # 获取最近一年的财务分析指标
+        df = ak.stock_financial_analysis_indicator(symbol=akshare_code, indicator="ROE")
+        if df is not None and not df.empty:
+            # 获取最近一季的ROE数据（最新行）
+            latest_roe = df.iloc[-1]['ROE']  # 假设列名为'ROE'
+            if pd.isna(latest_roe):
+                return None
+            return float(latest_roe)
+    except Exception as e:
+        print(f"akshare ROE获取失败 {stock_code}: {e}")
+    return None
 
 def fetch_stock_data(stock_codes: List[str], max_concurrent: int = 5) -> List[Dict[str, Any]]:
     """
@@ -56,7 +78,12 @@ def fetch_stock_data(stock_codes: List[str], max_concurrent: int = 5) -> List[Di
                 pb = quote.get('pb', 0.0)
                 market_cap = quote.get('market_cap', quote['current'] * random.uniform(1e8, 1e10))
                 # ROE暂时使用模拟数据，后续可接入akshare
-                roe = random.uniform(5, 25)
+                roe_real = get_roe_from_akshare(code, market)
+                if roe_real is None:
+                    roe = random.uniform(5, 25)
+                    print(f"  警告：使用模拟ROE {roe:.1f}% 替代")
+                else:
+                    roe = roe_real
 
                 stock_info = {
                     'code': code,
